@@ -46,7 +46,7 @@ export default function App() {
 
       mediaRecorderRef.current.start();
       setState(AppState.RECORDING);
-      
+
       setRecordingTime(0);
       timerRef.current = window.setInterval(() => {
         setRecordingTime(p => p + 1);
@@ -54,7 +54,7 @@ export default function App() {
 
     } catch (e) {
       console.error(e);
-      alert("Microphone access denied");
+      alert("Доступ к микрофону запрещен");
     }
   };
 
@@ -62,7 +62,7 @@ export default function App() {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       if (timerRef.current) clearInterval(timerRef.current);
-      
+
       mediaRecorderRef.current.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         await handleAnalysis(blob, 'audio/webm');
@@ -73,6 +73,12 @@ export default function App() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 4.5 * 1024 * 1024) {
+      alert("Файл слишком большой (максимум 4.5 МБ)");
+      return;
+    }
+
     await handleAnalysis(file, file.type);
   };
 
@@ -86,7 +92,7 @@ export default function App() {
       setState(AppState.RESULT);
     } catch (e) {
       console.error(e);
-      setError("We couldn't understand that bark. Try again?");
+      setError("Мы не смогли понять этот лай. Попробуйте еще раз?");
       setState(AppState.HOME);
     }
   };
@@ -94,7 +100,7 @@ export default function App() {
   // --- Views ---
 
   const renderHome = () => (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -103,7 +109,7 @@ export default function App() {
       <div className="flex-1 flex flex-col items-center justify-center w-full">
         <Mascot mood="happy" className="w-48 h-48 mb-8" />
         <h1 className="text-4xl font-display font-bold text-terracotta mb-2 text-center">WoofWhisper</h1>
-        <p className="text-charcoal/70 text-center mb-12 font-body">What is your dog trying to tell you?</p>
+        <p className="text-charcoal/70 text-center mb-12 font-body">Что пытается сказать ваша собака?</p>
 
         {/* Main CTA */}
         <button
@@ -113,7 +119,7 @@ export default function App() {
           <div className="absolute inset-0 rounded-full bg-terracotta animate-ping opacity-20 group-hover:opacity-40" />
           <div className="flex flex-col items-center">
             <Mic size={48} className="text-cream mb-2" />
-            <span className="text-cream font-display font-bold text-xl">Listen</span>
+            <span className="text-cream font-display font-bold text-xl">Слушать</span>
           </div>
         </button>
 
@@ -121,23 +127,23 @@ export default function App() {
         <div className="flex gap-4 w-full justify-center">
           <label className="flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-md text-sage font-bold cursor-pointer hover:bg-gray-50 transition-colors">
             <Video size={20} />
-            <span>Video</span>
+            <span>Видео</span>
             <input type="file" accept="video/*" className="hidden" onChange={handleFileUpload} />
           </label>
           <label className="flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-md text-sage font-bold cursor-pointer hover:bg-gray-50 transition-colors">
             <Upload size={20} />
-            <span>Audio</span>
+            <span>Аудио</span>
             <input type="file" accept="audio/*" className="hidden" onChange={handleFileUpload} />
           </label>
         </div>
       </div>
 
-      <button 
+      <button
         onClick={() => setState(AppState.HISTORY)}
         className="mt-8 text-charcoal/50 flex items-center gap-2 font-display hover:text-charcoal transition-colors"
       >
         <History size={18} />
-        Recent Translations
+        История переводов
       </button>
     </motion.div>
   );
@@ -149,7 +155,7 @@ export default function App() {
       className="flex flex-col items-center justify-center h-full max-w-md mx-auto px-6"
     >
       <Mascot mood="listening" className="w-40 h-40 mb-12" />
-      <h2 className="text-2xl font-display font-bold text-charcoal mb-4">Listening...</h2>
+      <h2 className="text-2xl font-display font-bold text-charcoal mb-4">Слушаю...</h2>
       <div className="w-full mb-8">
         <Waveform active={true} />
       </div>
@@ -162,7 +168,7 @@ export default function App() {
       >
         <div className="w-8 h-8 bg-white rounded-md" />
       </button>
-      <p className="mt-8 text-charcoal/60 text-sm">Tap square to stop</p>
+      <p className="mt-8 text-charcoal/60 text-sm">Нажмите квадрат, чтобы остановить</p>
     </motion.div>
   );
 
@@ -170,18 +176,18 @@ export default function App() {
     <motion.div className="flex flex-col items-center justify-center h-full max-w-md mx-auto px-6">
       <Mascot mood="confused" className="w-48 h-48 mb-8" />
       <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-display font-bold text-terracotta mb-2">Analyzing...</h2>
-        <motion.p 
+        <h2 className="text-2xl font-display font-bold text-terracotta mb-2">Анализирую...</h2>
+        <motion.p
           className="text-sage font-medium"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          Decoding tail wags & barks
+          Расшифровка виляний хвостом и лая
         </motion.p>
       </div>
       {/* Custom Progress Bar */}
       <div className="w-64 h-3 bg-gray-200 rounded-full mt-8 overflow-hidden">
-        <motion.div 
+        <motion.div
           className="h-full bg-terracotta rounded-full"
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}
@@ -200,8 +206,14 @@ export default function App() {
       Critical: 'bg-red-100 text-red-700'
     };
 
+    const stressLabels = {
+      Low: 'Низкий',
+      Medium: 'Средний',
+      Critical: 'Высокий'
+    };
+
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col h-full max-w-md mx-auto bg-cream relative overflow-y-auto"
@@ -211,25 +223,25 @@ export default function App() {
           <button onClick={() => setState(AppState.HOME)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full">
             <X size={24} className="text-charcoal" />
           </button>
-          <span className="font-display font-bold text-charcoal">Translation</span>
+          <span className="font-display font-bold text-charcoal">Перевод</span>
           <div className="w-8" /> {/* Spacer */}
         </div>
 
         <div className="px-6 pb-24 pt-4 space-y-6">
           {/* Main Bubble */}
           <div className="bg-white rounded-[2rem] rounded-tl-none p-6 shadow-lg border-2 border-terracotta/10 relative mt-4">
-             <div className="absolute -top-3 -left-[2px] w-4 h-4 bg-white border-l-2 border-t-2 border-terracotta/10 transform -rotate-45" />
-             <p className="text-2xl font-display font-bold text-charcoal leading-snug">
-               "{analysisResult.translation}"
-             </p>
+            <div className="absolute -top-3 -left-[2px] w-4 h-4 bg-white border-l-2 border-t-2 border-terracotta/10 transform -rotate-45" />
+            <p className="text-2xl font-display font-bold text-charcoal leading-snug">
+              "{analysisResult.translation}"
+            </p>
           </div>
 
           {/* Emotional Spectrum */}
           <div className="bg-white rounded-3xl p-6 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-sage uppercase tracking-wider text-xs">Emotional State</h3>
+              <h3 className="font-bold text-sage uppercase tracking-wider text-xs">Эмоциональное состояние</h3>
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${stressColors[analysisResult.emotionalSpectrum.stressLevel]}`}>
-                Stress: {analysisResult.emotionalSpectrum.stressLevel}
+                Стресс: {stressLabels[analysisResult.emotionalSpectrum.stressLevel]}
               </span>
             </div>
             <div className="text-4xl mb-2">{getEmoji(analysisResult.emotionalSpectrum.dominantEmotion)}</div>
@@ -245,15 +257,15 @@ export default function App() {
           <div className="grid grid-cols-1 gap-4">
             <div className="bg-sage/10 rounded-3xl p-5 border border-sage/20">
               <h4 className="font-bold text-sage mb-2 flex items-center gap-2">
-                <span className="bg-sage text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✓</span> 
-                Do This
+                <span className="bg-sage text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✓</span>
+                Что делать
               </h4>
               <p className="text-charcoal/80 text-sm">{analysisResult.recommendations.do}</p>
             </div>
             <div className="bg-red-50 rounded-3xl p-5 border border-red-100">
               <h4 className="font-bold text-red-400 mb-2 flex items-center gap-2">
-                <span className="bg-red-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</span> 
-                Don't Do This
+                <span className="bg-red-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</span>
+                Чего не делать
               </h4>
               <p className="text-charcoal/80 text-sm">{analysisResult.recommendations.dont}</p>
             </div>
@@ -263,18 +275,18 @@ export default function App() {
         {/* Sticky Action Footer */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-8 max-w-md mx-auto">
           <div className="flex gap-3">
-             <button 
-                onClick={() => setState(AppState.HOME)}
-                className="flex-1 bg-terracotta text-white font-bold py-4 rounded-2xl shadow-lg shadow-terracotta/20 active:scale-95 transition-transform flex items-center justify-center gap-2"
-             >
-               <RotateCcw size={20} /> New
-             </button>
-             <button className="bg-sand text-charcoal p-4 rounded-2xl hover:bg-sand/80 transition-colors">
-               <Share2 size={24} />
-             </button>
-             <button className="bg-sand text-charcoal p-4 rounded-2xl hover:bg-sand/80 transition-colors">
-               <Save size={24} />
-             </button>
+            <button
+              onClick={() => setState(AppState.HOME)}
+              className="flex-1 bg-terracotta text-white font-bold py-4 rounded-2xl shadow-lg shadow-terracotta/20 active:scale-95 transition-transform flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={20} /> Новый
+            </button>
+            <button className="bg-sand text-charcoal p-4 rounded-2xl hover:bg-sand/80 transition-colors">
+              <Share2 size={24} />
+            </button>
+            <button className="bg-sand text-charcoal p-4 rounded-2xl hover:bg-sand/80 transition-colors">
+              <Save size={24} />
+            </button>
           </div>
         </div>
       </motion.div>
@@ -282,7 +294,7 @@ export default function App() {
   };
 
   const renderHistory = () => (
-    <motion.div 
+    <motion.div
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
@@ -292,13 +304,13 @@ export default function App() {
         <button onClick={() => setState(AppState.HOME)} className="p-2 hover:bg-gray-100 rounded-full">
           <ChevronLeft size={24} className="text-charcoal" />
         </button>
-        <h2 className="text-2xl font-display font-bold text-charcoal">History</h2>
+        <h2 className="text-2xl font-display font-bold text-charcoal">История</h2>
       </div>
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {history.length === 0 ? (
           <div className="text-center text-charcoal/50 mt-20">
             <History size={48} className="mx-auto mb-4 opacity-30" />
-            <p>No translations yet.</p>
+            <p>Переводов пока нет.</p>
           </div>
         ) : (
           history.map(item => (
@@ -342,9 +354,9 @@ export default function App() {
 // Helper to map emotion string to emoji
 function getEmoji(emotion: string): string {
   const e = emotion.toLowerCase();
-  if (e.includes('happy') || e.includes('play')) return '🎾';
-  if (e.includes('anger') || e.includes('guard')) return '🛡️';
-  if (e.includes('fear') || e.includes('nervous')) return '🌩️';
-  if (e.includes('sad')) return '🌧️';
+  if (e.includes('happy') || e.includes('play') || e.includes('радость') || e.includes('игр') || e.includes('счаст')) return '🎾';
+  if (e.includes('anger') || e.includes('guard') || e.includes('злость') || e.includes('агресс') || e.includes('защит') || e.includes('рык')) return '🛡️';
+  if (e.includes('fear') || e.includes('nervous') || e.includes('страх') || e.includes('нерв') || e.includes('тревог') || e.includes('испуг')) return '🌩️';
+  if (e.includes('sad') || e.includes('грусть') || e.includes('печаль') || e.includes('тоск')) return '🌧️';
   return '🐕';
 }

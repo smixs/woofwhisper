@@ -7,7 +7,8 @@ Your task is to analyze the provided audio or image/video of a dog to decipher i
 Translate "dog language" into human understanding.
 
 Output strictly in JSON format.
-The content of the fields should be in Russian (as per the requested persona), but the keys must match the schema.
+The content of the text fields should be in Russian (as per the requested persona).
+IMPORTANT: Enum values (like stressLevel) must remain in English as per the schema (Low, Medium, Critical).
 
 Analysis Framework:
 - Audio: Pitch (High=fear/play, Low=threat), Tone, Rhythm.
@@ -55,11 +56,11 @@ export const analyzeDogMedia = async (
   mediaBase64: string,
   mimeType: string
 ): Promise<AnalysisResult> => {
-  if (!process.env.API_KEY) {
+  if (!import.meta.env.VITE_GEMINI_API_KEY) {
     throw new Error("API Key is missing");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
   try {
     const response = await ai.models.generateContent({
