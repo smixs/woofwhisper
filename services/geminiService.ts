@@ -1,5 +1,6 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
-import { AnalysisResult } from "../types";
+import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { AnalysisResult } from '../types';
+import { blobToBase64 } from './audioUtils';
 
 const SYSTEM_INSTRUCTION = `
 You are an Expert Canine Behaviorist, Ethologist, and Bioacoustics Analyst.
@@ -53,23 +54,20 @@ const RESPONSE_SCHEMA: Schema = {
 };
 
 export const analyzeDogMedia = async (
-  mediaBase64: string,
+  media: Blob,
   mimeType: string
 ): Promise<AnalysisResult> => {
-  if (!import.meta.env.VITE_GEMINI_API_KEY) {
-    throw new Error("API Key is missing");
-  }
+  if (import.meta.env.DEV && import.meta.env.VITE_GEMINI_API_KEY) {
+    const mediaBase64 = await blobToBase64(media);
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
-  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-
-  try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: 'gemini-2.5-flash',
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: RESPONSE_SCHEMA,
-        temperature: 0.7, // Slight creativity for the "translation" persona
+        temperature: 0.7,
       },
       contents: {
         parts: [
@@ -87,13 +85,25 @@ export const analyzeDogMedia = async (
     });
 
     if (!response.text) {
-      throw new Error("No response from Gemini");
+      throw new Error('No response from Gemini');
     }
 
-    const result = JSON.parse(response.text) as AnalysisResult;
-    return result;
-  } catch (error) {
-    console.error("Gemini Analysis Error:", error);
-    throw error;
+    return JSON.parse(response.text) as AnalysisResult;
   }
+
+  const response = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: {
+      'Content-Type': mimeType || 'application/octet-stream',
+      'X-Mime-Type': mimeType || 'application/octet-stream',
+    },
+    body: media,
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`API request failed (${response.status}): ${text || response.statusText}`);
+  }
+
+  return (await response.json()) as AnalysisResult;
 };

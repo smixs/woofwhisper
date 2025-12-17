@@ -3,7 +3,7 @@ import { Mic, Upload, Video, RotateCcw, Save, Share2, History, X, ChevronLeft } 
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppState, AnalysisResult, HistoryItem } from './types';
 import { analyzeDogMedia } from './services/geminiService';
-import { blobToBase64, formatTime } from './services/audioUtils';
+import { formatTime } from './services/audioUtils';
 import Mascot from './components/Mascot';
 import Waveform from './components/Waveform';
 
@@ -85,8 +85,7 @@ export default function App() {
   const handleAnalysis = async (blob: Blob, mimeType: string) => {
     setState(AppState.ANALYZING);
     try {
-      const base64 = await blobToBase64(blob);
-      const result = await analyzeDogMedia(base64, mimeType);
+      const result = await analyzeDogMedia(blob, mimeType);
       setAnalysisResult(result);
       saveToHistory(result);
       setState(AppState.RESULT);
