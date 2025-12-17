@@ -1,0 +1,7 @@
+{
+  "name": "WoofWhisper",
+  "description": "A playful, warm AI-powered dog translator that interprets your pet's vocalizations and body language.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
